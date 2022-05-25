@@ -1,0 +1,9 @@
+{
+    "name": "jtexclient",
+    "version": "0.0.1",
+    "description": "",
+    "main": "index.js",
+    "dependencies": {
+        "jtex-core": "git://github.com/Jaybit0/JtexCore.git#dev"
+    }
+}
