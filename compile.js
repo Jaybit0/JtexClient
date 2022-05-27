@@ -1,13 +1,14 @@
 const {JtexEnvironment} = require('jtex-core/envutils');
 const {Tokenizer} = require('jtex-core/tokenizer');
 const {Parser} = require('jtex-core/parser');
+const {isSubdir} = require('./utils');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
 
 function compile(args) {
     if (args.length < 2) {
-        console.log("Expecting an argument after 'compile'. Type 'jtex compile --help' for more information.");
+        console.log("Expecting an argument after 'compile'. Type 'compile --help' for more information.");
         return;
     }
     var cpath = path.isAbsolute(args[1]) ? args[1] : path.join(process.cwd(), args[1]);
@@ -26,13 +27,6 @@ function compile(args) {
         }
         compileDir(cpath, dest, parser);
     }
-}
-
-function isSubdir(parent, dir) {
-    const relative = path.relative(parent, dir);
-    if (relative.length == 0)
-        return false;
-    return relative && !relative.startsWith('..') && !path.isAbsolute(relative);
 }
 
 function compileDir(dir, dest, parser) {
