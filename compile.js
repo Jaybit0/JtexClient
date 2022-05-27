@@ -11,34 +11,40 @@ function compile(args) {
         return;
     }
     var cpath = path.isAbsolute(args[1]) ? args[1] : path.join(process.cwd(), args[1]);
+    var dest = args.length > 2 ? (path.isAbsolute(args[2]) ? args[2] : path.join(process.cwd(), args[2])) : null;
+    if (!fs.existsSync(cpath)) {
+        console.log("Directory or file not found: " + cpath);
+        return;
+    }
     var env = new JtexEnvironment(path.join(os.homedir(), ".jtex", "environments", "default")).init(force=true);
     var parser = new Parser(env);
-    if (!fs.existsSync(cpath)) {
-        console.log("Directory not found: " + cpath);
-        return;
-    } 
-    
     if (fs.statSync(cpath).isFile()) {
-        compileFile(cpath, parser);
+        compileFile(cpath, parser, dest);
     } else {
-        var files = fs.readdirSync(cpath);
-        for (file of files) {
-
+        if (!dest) {
+            dest = cpath;
         }
+        compileDir(cpath, dest, parser);
     }
 }
 
+function isSubdir(parent, dir) {
+    const relative = path.relative(parent, dir);
+    if (relative.length == 0)
+        return false;
+    return relative && !relative.startsWith('..') && !path.isAbsolute(relative);
+}
+
 function compileDir(dir, dest, parser) {
-    var files = fs.readdirSync(dir);
-    for (file of files) {
-        var f = path.join(dir, file);
-        var stats = fs.statSync(f);
-        if (stats.isFile()) {
-            compileFile(f, parser);
-        } else if (stats.isDirectory()) {
-            compileDir(f, dest);
-        }
-    }
+    if (!fs.existsSync(dest))
+        fs.mkdirSync(dest, {recursive: true});
+    var entries = fs.readdirSync(dir, { withFileTypes: true });
+    const folders = entries.filter(entry => entry.isDirectory() && (!isSubdir(dir, dest) || entry.name != path.basename(dest)));
+    const files = entries.filter(entry => entry.isFile());
+    for (file of files)
+        compileFile(path.join(dir, file.name), parser, path.join(dest, file.name));
+    for (folder of folders)
+        compileDir(path.join(dir, folder.name), path.join(dest, folder.name), parser);
 }
 
 function compileFile(f, parser, dest=null) {
@@ -47,6 +53,16 @@ function compileFile(f, parser, dest=null) {
         console.log('Skipping...');
         return;
     }
+    if (!fs.existsSync(path.dirname(f)))
+        fs.mkdirSync(dest, {recursive: true});
+    if (f.endsWith('.jtex')) {
+        compileJtex(f, parser, dest.substring(0, dest.length - 5) + '.tex');
+    } else if (dest && f != dest) {
+        fs.copyFileSync(f, dest);
+    }
+}
+
+function compileJtex(f, parser, dest=null) {
     var stats = fs.statSync(f);
     if (!stats.isFile()) {
         console.log("Expecting a file, but found a directory: " + f);
