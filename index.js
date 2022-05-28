@@ -1,4 +1,4 @@
-const {compile} = require('./compile');
+const { compile, makepdf } = require('./compile');
 const { setup } = require('./setup');
 
 var args = process.argv.slice(2);
@@ -15,6 +15,9 @@ function execCmd(args) {
             break;
         case "compile":
             compile(args);
+            break;
+        case "makepdf":
+            makepdf(args);
             break;
         default:
             console.log("Unknown command: " + args[0]);

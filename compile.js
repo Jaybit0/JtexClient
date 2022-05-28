@@ -5,6 +5,39 @@ const {isSubdir} = require('./utils');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
+const {exec} = require('child_process');
+
+function makepdf(args) {
+    if (args.length < 2) {
+        console.log("Expecting an argument after 'compile'. Type 'makepdf --help' for more information.");
+        return;
+    }
+    var cpath = path.isAbsolute(args[1]) ? args[1] : path.join(process.cwd(), args[1]);
+    if (!fs.existsSync(cpath)) {
+        console.log("File not found: " + cpath);
+        return;
+    }
+    if (!fs.statSync(cpath).isFile()) {
+        console.log("Expecting a file, but found a directory: " + cpath);
+        return;
+    }
+    compile(["compile", path.dirname(cpath), path.join(path.dirname(cpath), ".compiled")]);
+    var outpath = path.join(path.dirname(cpath), ".compiled", "out");
+    var mpath = path.join(path.dirname(cpath), ".compiled", path.basename(cpath, '.jtex') + '.tex');
+    var cmd = "pdflatex -interaction=nonstopmode -output-directory=" + outpath + " -aux-directory=" + outpath + " " + mpath;
+    exec(cmd, {cwd: path.join(path.dirname(cpath), ".compiled")}, (err, stdout, stderr) => {
+        if (err) {
+            console.log(err);
+            return;
+        }
+        //console.log(stdout);
+        console.log(stderr);
+        var pdfDir = path.join(outpath, path.basename(cpath, '.jtex') + '.pdf');
+        if (fs.existsSync(pdfDir))
+            fs.copyFileSync(pdfDir, path.join(path.dirname(cpath), path.basename(pdfDir)));
+        console.log("Compilation successful!");
+    });
+}
 
 function compile(args) {
     if (args.length < 2) {
@@ -72,3 +105,4 @@ function compileJtex(f, parser, dest=null) {
 }
 
 exports.compile = compile;
+exports.makepdf = makepdf;
