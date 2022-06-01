@@ -83,6 +83,10 @@ function compileFile(f, parser, dest=null) {
     if (!fs.existsSync(path.dirname(f)))
         fs.mkdirSync(dest, {recursive: true});
     if (f.endsWith('.jtex')) {
+        if (!dest)
+            dest = path.join(path.dirname(f), path.basename(f, '.jtex') + '.tex');
+        else if (dest.endsWith(".jtex"))
+            dest = path.join(path.dirname(dest), path.basename(dest, '.jtex') + '.tex');
         compileJtex(f, parser, dest.substring(0, dest.length - 5) + '.tex');
     } else if (dest && f != dest) {
         fs.copyFileSync(f, dest);
