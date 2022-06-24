@@ -1,5 +1,4 @@
 const { compile, makepdf } = require('./compile');
-const { setup } = require('./setup');
 
 var args = process.argv.slice(2);
 execCmd(args);
@@ -10,9 +9,6 @@ function execCmd(args) {
         return;
     }
     switch (args[0]) {
-        case "setup":
-            setup(args);
-            break;
         case "compile":
             compile(args);
             break;

@@ -6,13 +6,14 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const {exec} = require('child_process');
+const {extractTexErrors} = require('./tex_error_extractor');
 
 function makepdf(args) {
     if (args.length < 2) {
         console.log("Expecting an argument after 'compile'. Type 'makepdf --help' for more information.");
         return;
     }
-    var cpath = path.isAbsolute(args[1]) ? args[1] : path.join(process.cwd(), args[1]);
+    const cpath = path.isAbsolute(args[1]) ? args[1] : path.join(process.cwd(), args[1]);
     if (!fs.existsSync(cpath)) {
         console.log("File not found: " + cpath);
         return;
@@ -22,20 +23,32 @@ function makepdf(args) {
         return;
     }
     compile(["compile", path.dirname(cpath), path.join(path.dirname(cpath), ".compiled")]);
-    var outpath = path.join(path.dirname(cpath), ".compiled", "out");
-    var mpath = path.join(path.dirname(cpath), ".compiled", path.basename(cpath, '.jtex') + '.tex');
-    var cmd = "pdflatex -interaction=nonstopmode -output-directory=" + outpath + " -aux-directory=" + outpath + " " + mpath;
+    const outpath = path.join(path.dirname(cpath), ".compiled", "out");
+    const mpath = path.join(path.dirname(cpath), ".compiled", path.basename(cpath, '.jtex') + '.tex');
+    const cmd = "pdflatex -interaction=nonstopmode -output-directory=" + outpath + " -aux-directory=" + outpath + " " + mpath;
     exec(cmd, {cwd: path.join(path.dirname(cpath), ".compiled")}, (err, stdout, stderr) => {
         if (err) {
-            console.log(err);
-            return;
+            console.log("An error appeared in the latex compilation.");
+            console.log("For further information check the log file: .\\" + path.relative(path.dirname(cpath), path.join(outpath, path.basename(cpath, ".jtex") + ".log")));
+            var logs = fs.readFileSync(path.join(outpath, path.basename(cpath, ".jtex") + ".log"), "utf8");
+            logErrors = extractTexErrors(logs, path.join(path.dirname(cpath), ".compiled"));
+            fName = path.basename(cpath, ".jtex") + ".log";
+            if (logErrors.length > 0)
+                console.log("Quick error scanner (" + fName + "):");
+            for (logErr of logErrors) {
+                console.log();
+                console.log(" - line    " +  + logErr.line);
+                console.log("   - file: " + logErr.file);
+                console.log("   - msg:  " + logErr.msg);
+            }
         }
         //console.log(stdout);
         console.log(stderr);
         var pdfDir = path.join(outpath, path.basename(cpath, '.jtex') + '.pdf');
         if (fs.existsSync(pdfDir))
             fs.copyFileSync(pdfDir, path.join(path.dirname(cpath), path.basename(pdfDir)));
-        console.log("Compilation successful!");
+        if (!err)
+            console.log("Compilation successful!");
     });
 }
 

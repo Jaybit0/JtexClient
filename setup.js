@@ -20,7 +20,9 @@ async function setupWindows(args) {
         dest = path.isAbsolute(args[1]) ? args[1] : path.join(process.cwd(), args[1]);
     }
     if (__dirname != dest) {
-        copyDir(__dirname, dest, exclude=[path.join(__dirname, "setup.bat"), path.join(__dirname, "jtex.bat")]);
+        copyDir(__dirname, dest, exclude=[path.join(__dirname, "setup.bat"), path.join(__dirname, "jtex.bat"), 
+                path.join(__dirname, ".git"), path.join(__dirname, "setup.js"), path.join(__dirname, "dosetup.js"), 
+                path.join(__dirname, ".gitignore")]);
         fs.copyFileSync(path.join(__dirname, "jtex.bat"), path.join(path.dirname(dest), "jtex.bat"));
     }
 
@@ -62,9 +64,11 @@ function copyDir(from, to, exclude=[]) {
     const folders = entries.filter(entry => entry.isDirectory());
     const files = entries.filter(entry => entry.isFile());
     for (file of files)
-        fs.copyFileSync(path.join(from, file.name), path.join(to, file.name));
+        if (exclude.indexOf(path.join(from, file.name)) == -1)
+            fs.copyFileSync(path.join(from, file.name), path.join(to, file.name));
     for (folder of folders)
-        copyDir(path.join(from, folder.name), path.join(to, folder.name));
+        if (exclude.indexOf(path.join(from, folder.name)) == -1)
+            copyDir(path.join(from, folder.name), path.join(to, folder.name));
 }
 
 exports.setup = setup;
