@@ -1,6 +1,6 @@
 {
     "help": {
-        "description": "Shows this help. Use --help for more information about a specific command.",
+        "description": "Shows this help. Use '--help' for more information about a specific command.",
         "params": {},
         "optional-params": {}
     },

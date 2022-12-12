@@ -8,7 +8,7 @@ execCmd(args);
 
 function execCmd(args) {
     if (args.length == 0) {
-        console.log("Missing command. Type '--help' for more information.");
+        console.log("Missing command. Type 'help' for more information.");
         return;
     }
     if (args[args.length-1].toLowerCase().endsWith("--help")) {
@@ -16,6 +16,10 @@ function execCmd(args) {
         return;
     }
     switch (args[0]) {
+        case "help":
+        case "?":
+            help(args);
+            break;
         case "compile":
             compile(args);
             break;
@@ -27,6 +31,7 @@ function execCmd(args) {
             break;
         default:
             console.log("Unknown command: " + args[0]);
+            console.log("Type 'help' for more information.");
     }
 }
 
