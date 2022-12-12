@@ -1,0 +1,30 @@
+{
+    "help": {
+        "description": "Shows this help. Use --help for more information about a specific command.",
+        "params": {},
+        "optional-params": {}
+    },
+    "setup": {
+        "description": "Installs JteX as a CMD-command. Modifies the environment-variables.",
+        "params": {},
+        "optional-params": {
+            "path": "The path to the JteX installation. If not specified, the home directory is used."
+        }
+    },
+    "compile": {
+        "description": "Compiles a JteX-file or directory. Creates '.tex' files from '.jtex' files with the same name.",
+        "params": {
+            "path": "The JteX-file or directory to compile."
+        },
+        "optional-params": {
+            "destination": "The destination file or folder. If not specified, the output files lie in the same folder and have the same name."
+        }
+    },
+    "makepdf": {
+        "description": "Compiles a JteX-file or directory and creates a PDF-file from it. The compiled files are written into the folder '.compiled'.",
+        "params": {
+            "path": "The JteX-file or directory to compile."
+        },
+        "optional-params": {}
+    }
+}

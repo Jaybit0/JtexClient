@@ -31,7 +31,7 @@ async function setupWindows(args) {
     if (result.length == 1) {
         if (result[0].value.split(";").indexOf(path.dirname(dest)) > -1){
             console.log("JteX is already installed in the user path.");
-            console.log("Jtex was successfully installed.");
+            console.log("JteX was successfully installed.");
             return;
         }
         const toPut = {
