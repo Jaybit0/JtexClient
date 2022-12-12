@@ -64,8 +64,7 @@ function help(args) {
             for (var param in json[cmd]["params"]) {
                 console.log("\x1b[32m", param.padEnd(maxLength), "\x1b[36m-", json[cmd]["params"][param], "\x1b[0m");
             }
-            console.log("\x1b[35mOptional parameters:" + "\x1b[0m")
-            maxLength = 0;
+            console.log("\x1b[35mOptional parameters:" + "\x1b[0m");
             for (var param in json[cmd]["optional-params"]) {
                 if (maxLength < param.length)
                     maxLength = param.length;
