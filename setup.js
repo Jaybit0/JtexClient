@@ -8,8 +8,11 @@ function setup(args) {
         case "win32":
             setupWindows(args);
             break;
+        case "darwin":
+            setupDarwin(args);
+            break;
         default:
-            console.log("Unsupported platform: " + process.platform());
+            console.log("Unsupported platform: " + process.platform);
             break;
     }
 }
@@ -51,6 +54,24 @@ async function setupWindows(args) {
         console.log("Please restart your computer to use jtex as a console-command.");
     }
     
+}
+
+function setupDarwin(args) {
+    if (args.length == 0) {
+        console.log("It is required to specify the destination folder as the first argument.");
+        return
+    }
+
+    const dest = path.isAbsolute(args[1]) ? args[1] : path.join(process.cwd(), args[1]);
+
+    if (__dirname != dest) {
+        copyDir(__dirname, dest, exclude=[path.join(__dirname, "setup.bat"), path.join(__dirname, "jtex.bat"), 
+                path.join(__dirname, ".git"), path.join(__dirname, "setup.js"), path.join(__dirname, "dosetup.js"), 
+                path.join(__dirname, ".gitignore")]);
+        fs.copyFileSync(path.join(__dirname, "jtex.sh"), path.join(path.dirname(dest), "jtex.sh"));
+    }
+
+    console.log("Jtex was successfully installed.");
 }
 
 function copyDir(from, to, exclude=[]) {
