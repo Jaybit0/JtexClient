@@ -2,29 +2,52 @@
     "help": {
         "description": "Shows this help. Use '--help' for more information about a specific command.",
         "params": {},
-        "optional-params": {}
+        "optional-params": {},
+        "examples": [
+            {
+                "command": "jtex compile --help",
+                "description": "Shows a more detailed description of the command 'jtex compile'."
+            }
+        ]
     },
     "setup": {
-        "description": "Installs JteX as a CMD-command. Modifies the environment-variables.",
+        "description": "Installs JTeX as a CMD-command. Modifies the environment-variables.",
         "params": {},
         "optional-params": {
-            "path": "The path to the JteX installation. If not specified, the home directory is used."
-        }
+            "path": "The path to the JTeX installation. If not specified, the home directory is used."
+        },
+        "examples": []
     },
     "compile": {
-        "description": "Compiles a JteX-file or directory. Creates '.tex' files from '.jtex' files with the same name.",
+        "description": "Compiles a JTeX-file or directory. Creates '.tex' files from '.jtex' files with the same name.",
         "params": {
-            "path": "The JteX-file or directory to compile."
+            "path": "The JTeX-file or directory to compile."
         },
         "optional-params": {
-            "destination": "The destination file or folder. If not specified, the output files lie in the same folder and have the same name."
-        }
+            "destination": "The destination file or folder. If not specified, the output files lie in the same folder and have the same name. All files will be copied to the new directory (not only '*.jtex' files)"
+        },
+        "examples": [
+            {
+                "command": "jtex compile ./source ./target",
+                "description": "Compiles the entire directory './source' and writes the files to the folder './target'."
+            },
+            {
+                "command": "jtex compile ./main.jtex ./main.tex",
+                "description": "Compiles the file './main.jtex' and writes it to the file './main.tex' which will be created if it doesn't exist."
+            }
+        ]
     },
     "makepdf": {
-        "description": "Compiles a JteX-file or directory and creates a PDF-file from it. The compiled files are written into the folder '.compiled'.",
+        "description": "Compiles a JTeX-file or directory and creates a PDF-file from it. The compiled files are written into the folder '.compiled'.",
         "params": {
-            "path": "The JteX-file or directory to compile."
+            "path": "The main JTeX-file of this project (root file)."
         },
-        "optional-params": {}
+        "optional-params": {},
+        "examples": [
+            {
+                "command": "jtex makepdf ./main.jtex",
+                "description": "Compiles the directory of the file './main.jtex' and creates a pdf using 'pdflatex' with the root file './main.jtex'"
+            }
+        ]
     }
 }

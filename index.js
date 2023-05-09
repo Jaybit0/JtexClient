@@ -12,7 +12,7 @@ function execCmd(args) {
         return;
     }
     if (args[args.length-1].toLowerCase().endsWith("--help")) {
-        help(args);
+        help(args, true);
         return;
     }
     switch (args[0]) {
@@ -35,7 +35,7 @@ function execCmd(args) {
     }
 }
 
-function help(args) {
+function help(args, detailed = false) {
     var data = fs.readFileSync(path.join(__dirname, "help.json"));
     var json = JSON.parse(data);
     var ordered_json = Object.keys(json).sort().reduce(
@@ -45,8 +45,10 @@ function help(args) {
             }, 
             {}
         );
-    if (args.length == 1) {
-        console.log("Available commands:");
+    if (!detailed) {
+        help(["help"], true);
+        console.log("");
+        console.log("\x1b[35mAvailable commands:", "\x1b[0m");
         var maxLength = 0;
         for (var key in ordered_json) {
             if (maxLength < key.length)
@@ -69,6 +71,7 @@ function help(args) {
             for (var param in json[cmd]["params"]) {
                 console.log("\x1b[32m", param.padEnd(maxLength), "\x1b[36m-", json[cmd]["params"][param], "\x1b[0m");
             }
+            maxLength = 0;
             console.log("\x1b[35mOptional parameters:" + "\x1b[0m");
             for (var param in json[cmd]["optional-params"]) {
                 if (maxLength < param.length)
@@ -76,6 +79,11 @@ function help(args) {
             }
             for (var param in json[cmd]["optional-params"]) {
                 console.log("\x1b[32m", param.padEnd(maxLength), "\x1b[36m-", json[cmd]["optional-params"][param], "\x1b[0m");
+            }
+            console.log("\x1b[35mExamples:" + "\x1b[0m");
+            for (var i = 0; i < json[cmd]["examples"].length; i++) {
+                console.log("\x1b[35m -", "Command:", "\x1b[32m" + json[cmd]["examples"][i]["command"], "\x1b[0m");
+                console.log("\x1b[35m  ", "Description:", "\x1b[36m" + json[cmd]["examples"][i]["description"], "\x1b[0m");
             }
         } else {
             console.log("Unknown command: " + cmd);
