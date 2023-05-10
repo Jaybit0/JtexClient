@@ -24,7 +24,7 @@ if ! command -v node &>/dev/null; then
 fi
 
 # Define the source file, target directory, and symlink name
-VERSION="0.0.4"
+VERSION="0.0.5"
 SOURCE_FILE="jtex.sh"
 TARGET_DIR="/usr/local/lib/jtex/v$VERSION"
 SYMLINK_NAME="jtex"

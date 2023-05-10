@@ -21,7 +21,10 @@ async function upgrade() {
       gitClone.on('exit', (code) => {
         if (code === 0) {
           // Successfully cloned the repository, now run the install.sh script
-          const installScript = spawn('sudo', [`${localRepoPath}/install.sh`, process.pid], { stdio: 'inherit' });
+          const installScript = spawn('sudo', ['./install.sh', process.pid], {
+            stdio: 'inherit',
+            cwd: localRepoPath
+          });
           installScript.on('error', (error) => {
             console.error('Error running the install.sh script:', error);
           });
