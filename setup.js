@@ -18,7 +18,7 @@ function setup(args) {
 }
 
 async function setupWindows(args) {
-    const dest = path.join(os.homedir(), "Jtex", "v0.0.1");
+    const dest = path.join(os.homedir(), "Jtex", "v0.0.3");
     if (args.length > 1) {
         dest = path.isAbsolute(args[1]) ? args[1] : path.join(process.cwd(), args[1]);
     }
