@@ -1,9 +1,10 @@
 {
     "name": "jtexclient",
-    "version": "0.0.1",
+    "version": "0.0.2‚",
     "description": "",
     "main": "index.js",
     "dependencies": {
+        "auto-git-update": "^2.1.2",
         "jtex-core": "git://github.com/Jaybit0/JtexCore.git",
         "regedit": "^5.0.0"
     }

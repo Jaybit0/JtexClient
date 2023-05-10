@@ -1,5 +1,6 @@
 const { compile, makepdf } = require('./compile');
 const { update } = require('./update');
+const { upgrade } = require('./upgrade');
 const fs = require('fs');
 const path = require('path');
 
@@ -28,6 +29,9 @@ function execCmd(args) {
             break;
         case "update":
             update(args);
+            break;
+        case "upgrade":
+            upgrade(args);
             break;
         default:
             console.log("Unknown command: " + args[0]);
