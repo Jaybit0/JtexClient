@@ -5,9 +5,9 @@ const fs = require('fs');
 const path = require('path');
 
 var args = process.argv.slice(2);
-execCmd(args);
+await execCmd(args);
 
-function execCmd(args) {
+async function execCmd(args) {
     if (args.length == 0) {
         console.log("Missing command. Type 'help' for more information.");
         return;
@@ -31,7 +31,7 @@ function execCmd(args) {
             update(args);
             break;
         case "upgrade":
-            upgrade(args);
+            await upgrade(args);
             break;
         default:
             console.log("Unknown command: " + args[0]);

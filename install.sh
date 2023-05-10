@@ -1,4 +1,15 @@
 #!/bin/bash
+pid=$1
+
+if [ ! -z "$pid" ]; then
+  # Terminate the current Node.js script
+  kill $pid
+
+  # Wait for the Node.js script to exit
+  while kill -0 $pid 2> /dev/null; do
+    sleep 1
+  done
+fi
 
 # Check if tex is installed
 if ! command -v tex &> /dev/null; then
@@ -13,8 +24,9 @@ if ! command -v node &>/dev/null; then
 fi
 
 # Define the source file, target directory, and symlink name
+VERSION="0.0.2"
 SOURCE_FILE="jtex.sh"
-TARGET_DIR="/usr/local/lib/jtex/v0.0.1"
+TARGET_DIR="/usr/local/lib/jtex/v$VERSION"
 SYMLINK_NAME="jtex"
 
 # Create the target directory if it doesn't exist
