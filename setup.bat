@@ -3,8 +3,8 @@
 rem Check if a process ID was provided as an argument
 IF NOT "%1"=="" (
   rem Get the process ID from the command line argument
-  echo Process ID provided: %1
   set "PID=%1"
+  echo Process ID: %PID%
 
   rem Kill the process with the specified process ID
   echo Killing process with PID %PID%
