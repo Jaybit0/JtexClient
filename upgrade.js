@@ -1,8 +1,7 @@
 const { spawn } = require('child_process');
 const os = require('os');
 const fs = require('fs');
-const { promisify } = require('util');
-const rimraf = promisify(require('rimraf'));
+const rimraf = require('rimraf');
 
 async function upgrade() {
     try {
