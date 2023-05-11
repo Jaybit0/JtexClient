@@ -6,7 +6,7 @@ IF NOT "%1"=="" (
   set test=%1
 
   rem Kill the process with the specified process ID
-  echo Killing process with PID %test%
+  echo Killing process with PID %1
   taskkill /F /PID %test%
 
   rem Add a small delay to ensure the process is terminated
