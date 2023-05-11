@@ -10,7 +10,15 @@ async function upgrade() {
 
       // Check if localRepoPath exists and delete it
       if (fs.existsSync(localRepoPath)) {
-        await rimraf(localRepoPath);
+        await new Promise((resolve, reject) => {
+          rimraf(localRepoPath, (error) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve();
+            }
+          });
+        });
       }
   
       // Clone the Git repository containing the update
