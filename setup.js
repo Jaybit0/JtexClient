@@ -18,10 +18,10 @@ function setup(args) {
 }
 
 async function setupWindows(args) {
-    const dest = path.join(os.homedir(), "Jtex", "v0.0.8");
-    if (args.length > 1) {
-        dest = path.isAbsolute(args[1]) ? args[1] : path.join(process.cwd(), args[1]);
-    }
+    var dest = path.join(os.homedir(), "Jtex", "v0.0.8");
+    /*if (args.length > 1) {
+        //dest = path.isAbsolute(args[1]) ? args[1] : path.join(process.cwd(), args[1]);
+    }*/
     if (__dirname != dest) {
         copyDir(__dirname, dest, exclude=[path.join(__dirname, "setup.bat"), path.join(__dirname, "jtex.bat"), 
                 path.join(__dirname, ".git"), path.join(__dirname, "setup.js"), path.join(__dirname, "dosetup.js"), 
