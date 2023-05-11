@@ -49,5 +49,11 @@
                 "description": "Compiles the directory of the file './main.jtex' and creates a pdf using 'pdflatex' with the root file './main.jtex'"
             }
         ]
+    },
+    "upgrade": {
+        "description": "Upgrades JTeX to the latest version.",
+        "params": {},
+        "optional-params": {},
+        "examples": []
     }
 }
