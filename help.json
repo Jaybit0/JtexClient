@@ -63,7 +63,10 @@
         },
         "optional-params": {},
         "examples": [
-            "jtex update latest"
+            {
+                "command": "jtex update latest",
+                "description": "Updates JTeX to the latest version."
+            }
         ]
     }
 }
