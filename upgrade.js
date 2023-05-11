@@ -1,7 +1,22 @@
 const { spawn } = require('child_process');
 const os = require('os');
 const fs = require('fs');
-const rimraf = require('rimraf');
+const { promisify } = require('util');
+const rmdir = promisify(fs.rmdir);
+
+async function deleteFolderRecursive(path) {
+    if (fs.existsSync(path)) {
+        for (const entry of fs.readdirSync(path)) {
+            const curPath = `${path}/${entry}`;
+            if (fs.lstatSync(curPath).isDirectory()) {
+                await deleteFolderRecursive(curPath);
+            } else {
+                fs.unlinkSync(curPath);
+            }
+        }
+        await rmdir(path);
+    }
+}
 
 async function upgrade() {
     try {
@@ -9,17 +24,7 @@ async function upgrade() {
       const localRepoPath = os.tmpdir() + '/tmp-update-repo';
 
       // Check if localRepoPath exists and delete it
-      if (fs.existsSync(localRepoPath)) {
-        await new Promise((resolve, reject) => {
-          rimraf(localRepoPath, (error) => {
-            if (error) {
-              reject(error);
-            } else {
-              resolve();
-            }
-          });
-        });
-      }
+      await deleteFolderRecursive(localRepoPath);
   
       // Clone the Git repository containing the update
       const gitClone = spawn('git', ['clone', repoUrl, localRepoPath]);
