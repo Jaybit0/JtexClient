@@ -50,8 +50,7 @@ async function upgradeWindows() {
       if (code === 0) {
         // Successfully cloned the repository, now run the setup.bat script
         const setupScript = spawn('cmd.exe', ['/c', 'setup.bat', process.pid], {
-          stdio: 'ignore',
-          detached: true,
+          stdio: 'inherit',
           cwd: localRepoPath
         });
         setupScript.on('error', (error) => {
