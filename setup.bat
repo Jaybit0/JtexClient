@@ -3,11 +3,11 @@
 rem Check if a process ID was provided as an argument
 IF NOT "%1"=="" (
   rem Get the process ID from the command line argument
-  set PID=%1
+  set pid=%1
 
   rem Kill the process with the specified process ID
-  echo Killing process with PID %PID%
-  taskkill /F /PID %PID%
+  echo Killing process with PID %pid%
+  taskkill /F /PID %pid%
 
   rem Add a small delay to ensure the process is terminated
   timeout /t 1 /nobreak >nul
