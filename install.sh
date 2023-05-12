@@ -31,7 +31,7 @@ if ! command -v node &>/dev/null; then
     if [ "$platform" = "Darwin" ]; then
         brew install node
     elif [ "$platform" = "Linux" ]; then
-        curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+        curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
         sudo apt-get install -y nodejs
     else
         echo "Unsupported platform, please install Node.js manually."
