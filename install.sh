@@ -25,6 +25,18 @@ if ! command -v tex &> /dev/null; then
     exit
 fi
 
+# Check if curl is installed, if not, install it
+if ! command -v curl &>/dev/null; then
+    echo "curl not found, installing..."
+    if [ "$platform" = "Linux" ]; then
+        sudo apt-get update
+        sudo apt-get install -y curl
+    else
+        echo "Unsupported platform, please install curl manually."
+        exit
+    fi
+fi
+
 # Check if Node.js is installed, if not, install it
 if ! command -v node &>/dev/null; then
     echo "Node.js not found, installing..."
