@@ -52,6 +52,17 @@ if ! command -v npm &>/dev/null; then
     fi
 fi
 
+# Update npm to the latest version
+echo "Updating npm to the latest version..."
+if [ "$platform" = "Darwin" ]; then
+    sudo npm install -g npm
+elif [ "$platform" = "Linux" ]; then
+    sudo npm install -g npm
+else
+    echo "Unsupported platform, please update npm manually."
+    exit
+fi
+
 # Define the source file, target directory, and symlink name
 VERSION="0.0.8"
 SOURCE_FILE="jtex.sh"
