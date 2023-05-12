@@ -24,7 +24,8 @@ async function upgrade() {
       upgradeWindows();
       break;
     case "darwin":
-      upgradeDarwin();
+    case "linux":
+      upgradeUnix();
       break;
     default:
       console.log("Unsupported platform: " + process.platform);
@@ -76,8 +77,14 @@ async function upgradeWindows() {
   }
 }
 
-async function upgradeDarwin() {
+async function upgradeUnix() {
   try {
+    // Check if the user is root
+    if (process.getuid() !== 0) {
+      console.error('You must run this script as root (sudo jtex upgrade)');
+      return;
+    }
+
     const repoUrl = 'https://github.com/Jaybit0/JtexClient.git';
     const localRepoPath = os.tmpdir() + '/tmp-update-repo';
 

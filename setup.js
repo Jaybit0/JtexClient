@@ -9,7 +9,8 @@ function setup(args) {
             setupWindows(args);
             break;
         case "darwin":
-            setupDarwin(args);
+        case "linux":
+            setupUnix(args);
             break;
         default:
             console.log("Unsupported platform: " + process.platform);
@@ -56,7 +57,7 @@ async function setupWindows(args) {
     
 }
 
-function setupDarwin(args) {
+function setupUnix(args) {
     if (args.length == 0) {
         console.log("It is required to specify the destination folder as the first argument.");
         return

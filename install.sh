@@ -1,5 +1,13 @@
 #!/bin/bash
+
+# Check if the script has elevated permissions
+if [ "$EUID" -ne 0 ]; then
+  echo "Please run the script with elevated permissions (e.g., sudo)."
+  exit
+fi
+
 pid=$1
+platform=$(uname)
 
 if [ ! -z "$pid" ]; then
   # Terminate the current Node.js script
@@ -20,7 +28,15 @@ fi
 # Check if Node.js is installed, if not, install it
 if ! command -v node &>/dev/null; then
     echo "Node.js not found, installing..."
-    brew install node
+    if [ "$platform" = "Darwin" ]; then
+        brew install node
+    elif [ "$platform" = "Linux" ]; then
+        curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+        sudo apt-get install -y nodejs
+    else
+        echo "Unsupported platform, please install Node.js manually."
+        exit
+    fi
 fi
 
 # Define the source file, target directory, and symlink name
@@ -44,4 +60,4 @@ npm update
 node ./dosetup.js $TARGET_DIR
 
 # Create a symlink in /usr/local/bin to call your script from any directory
-ln -sf $TARGET_DIR/$SOURCE_FILE /usr/local/bin/$SYMLINK_NAME
+sudo ln -sf $TARGET_DIR/$SOURCE_FILE /usr/local/bin/$SYMLINK_NAME
