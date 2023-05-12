@@ -39,6 +39,19 @@ if ! command -v node &>/dev/null; then
     fi
 fi
 
+# Check if npm is installed, if not, install it
+if ! command -v npm &>/dev/null; then
+    echo "npm not found, installing..."
+    if [ "$platform" = "Darwin" ]; then
+        brew install npm
+    elif [ "$platform" = "Linux" ]; then
+        sudo apt-get install -y npm
+    else
+        echo "Unsupported platform, please install npm manually."
+        exit
+    fi
+fi
+
 # Define the source file, target directory, and symlink name
 VERSION="0.0.8"
 SOURCE_FILE="jtex.sh"
