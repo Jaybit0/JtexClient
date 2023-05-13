@@ -23,9 +23,9 @@ function makepdf(args) {
         return;
     }
     compile(["compile", path.dirname(cpath), path.join(path.dirname(cpath), ".compiled")]);
-    const outpath = path.join(path.dirname(cpath), ".compiled", "out");
+    const outpath = path.join(path.dirname(cpath), ".compiled"/*, "out"*/);
     const mpath = path.join(path.dirname(cpath), ".compiled", path.basename(cpath, '.jtex') + '.tex');
-    const cmd = "pdflatex -interaction=nonstopmode -output-directory=" + outpath + " -aux-directory=" + outpath + " " + mpath;
+    const cmd = "pdflatex -interaction=nonstopmode -output-directory=" + outpath + /*" -aux-directory=" + outpath*/ + " " + mpath;
     exec(cmd, {cwd: path.join(path.dirname(cpath), ".compiled")}, (err, stdout, stderr) => {
         if (err) {
             console.log("An error appeared in the latex compilation.");
