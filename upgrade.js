@@ -100,8 +100,9 @@ async function upgradeUnix() {
     gitClone.on('exit', (code) => {
       if (code === 0) {
         // Successfully cloned the repository, now run the install.sh script
-        const installScript = spawn('sudo', ['./install.sh', process.ppid], {
-          stdio: 'inherit',
+        const installScript = spawn('sudo', ['./install.sh', process.pid], {
+          stdio: 'ignore',
+          detached: true,
           cwd: localRepoPath
         });
         installScript.on('error', (error) => {
