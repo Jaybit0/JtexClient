@@ -101,7 +101,7 @@ async function upgradeUnix() {
       if (code === 0) {
         // Successfully cloned the repository, now run the install.sh script
         const installScript = spawn('sudo', ['./install.sh', process.pid], {
-          stdio: 'ignore',
+          stdio: 'inherit',
           detached: true,
           cwd: localRepoPath
         });
