@@ -42,7 +42,7 @@ function makepdf(args) {
                 console.log("   - msg:  " + logErr.msg);
             }
         }
-        //console.log(stdout);
+        console.log(stdout);
         console.log(stderr);
         var pdfDir = path.join(outpath, path.basename(cpath, '.jtex') + '.pdf');
         if (fs.existsSync(pdfDir))
