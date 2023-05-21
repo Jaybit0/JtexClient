@@ -102,7 +102,8 @@ async function upgradeUnix() {
       if (code === 0) {
         // Successfully cloned the repository, now run the install.sh script
         const installScript = exec('sudo ./install.sh', {
-          cwd: localRepoPath
+          cwd: localRepoPath,
+          stdio: 'inherit'
         });
         installScript.on('error', (error) => {
           console.error('Error running the install.sh script:', error);
