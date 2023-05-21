@@ -63,7 +63,7 @@
     "update": {
         "description": "Updates the JTeX-Core to the specified version.",
         "params": {
-            "version": "The version/commit-hash/branch/tag to update to. Use 'latest' to update to the latest version."
+            "version": "The version/commit-hash/tag to update to. Use 'latest' to update to the latest version."
         },
         "optional-params": {},
         "examples": [
