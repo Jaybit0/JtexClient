@@ -1,4 +1,5 @@
 const { spawn } = require('child_process');
+const { exec } = require('child_process');
 const os = require('os');
 const fs = require('fs');
 const { promisify } = require('util');
