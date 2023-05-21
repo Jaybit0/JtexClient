@@ -19,14 +19,18 @@ async function deleteFolderRecursive(path) {
     }
 }
 
-async function upgrade() {
+async function upgrade(args) {
+  branchName = "main"
+  if (args.length > 1) {
+    branchName = args[1];
+  }
   switch(process.platform) {
     case "win32":
-      upgradeWindows();
+      upgradeWindows(branchName);
       break;
     case "darwin":
     case "linux":
-      upgradeUnix();
+      upgradeUnix(branchName);
       break;
     default:
       console.log("Unsupported platform: " + process.platform);
@@ -34,7 +38,7 @@ async function upgrade() {
   }
 }
 
-async function upgradeWindows() {
+async function upgradeWindows(branchName) {
   try {
     const repoUrl = 'https://github.com/Jaybit0/JtexClient.git';
     const localRepoPath = os.tmpdir() + '\\tmp-update-repo';
@@ -48,37 +52,43 @@ async function upgradeWindows() {
       console.error('Error cloning the repository:', error);
     });
 
-    gitClone.on('exit', (code) => {
+    gitClone.on('exit', async (code) => {
       if (code === 0) {
-        // Successfully cloned the repository, now run the setup.bat script
-        const setupScript = spawn('cmd.exe', ['/c', 'setup.bat', process.pid], {
-          stdio: 'inherit',
-          cwd: localRepoPath
-        });
-        setupScript.on('error', (error) => {
-          console.error('Error running the setup.bat script:', error);
+        // Successfully cloned the repository, now switch to the specified branch
+        const gitCheckout = spawn('git', ['checkout', branchName], { cwd: localRepoPath });
+        gitCheckout.on('error', (error) => {
+          console.error('Error switching to branch:', error);
         });
 
-        setupScript.on('exit', (code) => {
+        gitCheckout.on('exit', async (code) => {
           if (code === 0) {
-            // Successfully executed the setup.bat script
-            console.log('Update completed successfully');
+            // Successfully switched to the specified branch, now run the setup.bat script
+            const setupScript = spawn('cmd', ['/c', 'setup.bat'], { cwd: localRepoPath });
+            setupScript.on('error', (error) => {
+              console.error('Error running setup script:', error);
+            });
+
+            setupScript.on('exit', (code) => {
+              if (code === 0) {
+                console.log('Upgrade completed successfully');
+              } else {
+                console.error('Upgrade failed with error code:', code);
+              }
+            });
           } else {
-            console.error(`setup.bat script exited with code ${code}`);
+            console.error('Error switching to branch, error code:', code);
           }
-          // Exit the current Node.js script
-          process.exit(code);
         });
       } else {
-        console.error(`git clone exited with code ${code}`);
+        console.error('Error cloning the repository, error code:', code);
       }
     });
   } catch (error) {
-    console.error('Error updating the script:', error);
+    console.error('Error upgrading:', error);
   }
 }
 
-async function upgradeUnix() {
+async function upgradeUnix(branchName) {
   try {
     // Check if the user is root
     if (process.getuid() !== 0) {
