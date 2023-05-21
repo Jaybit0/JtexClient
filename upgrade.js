@@ -106,8 +106,8 @@ async function upgradeUnix() {
           stdio: 'inherit'
         });
 
-        coffeeProcess.stdout.pipe(process.stdout);
-        
+        installScript.stdout.pipe(process.stdout);
+
         installScript.on('error', (error) => {
           console.error('Error running the install.sh script:', error);
         });
