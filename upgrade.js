@@ -101,12 +101,10 @@ async function upgradeUnix() {
     gitClone.on('exit', (code) => {
       if (code === 0) {
         // Successfully cloned the repository, now run the install.sh script
-        const installScript = exec('sudo ./install.sh', {
-          cwd: localRepoPath
-        });
-
-        installScript.stdout.on('data', function(data) {
-          console.log(data); 
+        const installScript = spawn('sudo ./install.sh', {
+          cwd: localRepoPath,
+          stdio: 'inherit',
+          shell: true
         });
 
         installScript.on('error', (error) => {
