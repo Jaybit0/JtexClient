@@ -108,33 +108,42 @@ async function upgradeUnix(branchName) {
       console.error('Error cloning the repository:', error);
     });
 
-    gitClone.on('exit', (code) => {
+    gitClone.on('exit', async (code) => {
       if (code === 0) {
-        // Successfully cloned the repository, now run the install.sh script
-        const installScript = spawn('sudo ./install.sh', {
-          cwd: localRepoPath,
-          stdio: 'inherit',
-          shell: true
+        // Successfully cloned the repository, now switch to the specified branch
+        const gitCheckout = spawn('git', ['checkout', branchName], { cwd: localRepoPath });
+        gitCheckout.on('error', (error) => {
+          console.error('Error switching to branch:', error);
         });
 
-        installScript.on('error', (error) => {
-          console.error('Error running the install.sh script:', error);
-        });
-
-        installScript.on('exit', (code) => {
+        gitCheckout.on('exit', async (code) => {
           if (code === 0) {
-            // Successfully executed the install.sh script
-            console.log('Update completed successfully');
+            // Successfully switched to the specified branch, now run the install.sh script
+            const installScript = spawn('sudo', ['./install.sh'], {
+              cwd: localRepoPath,
+              stdio: 'inherit',
+            });
+            installScript.on('error', (error) => {
+              console.error('Error running install script:', error);
+            });
+
+            installScript.on('exit', (code) => {
+              if (code === 0) {
+                console.log('Upgrade completed successfully');
+              } else {
+                console.error('Upgrade failed with error code:', code);
+              }
+            });
           } else {
-            console.error(`install.sh script exited with code ${code}`);
+            console.error('Error switching to branch, error code:', code);
           }
         });
       } else {
-        console.error(`git clone exited with code ${code}`);
+        console.error('Error cloning the repository, error code:', code);
       }
     });
   } catch (error) {
-    console.error('Error updating the script:', error);
+    console.error('Error upgrading:', error);
   }
 }
 
