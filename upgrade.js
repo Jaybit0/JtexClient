@@ -105,7 +105,7 @@ async function upgradeUnix() {
           cwd: localRepoPath
         });
 
-        coffeeProcess.stdout.on('data', function(data) {
+        installScript.stdout.on('data', function(data) {
           console.log(data); 
         });
 
