@@ -100,9 +100,7 @@ async function upgradeUnix() {
     gitClone.on('exit', (code) => {
       if (code === 0) {
         // Successfully cloned the repository, now run the install.sh script
-        const installScript = spawn('sudo', ['./install.sh', process.pid], {
-          stdio: 'inherit',
-          detached: true,
+        const installScript = exec('sudo ./install.sh', {
           cwd: localRepoPath
         });
         installScript.on('error', (error) => {
@@ -116,8 +114,6 @@ async function upgradeUnix() {
           } else {
             console.error(`install.sh script exited with code ${code}`);
           }
-          // Exit the current Node.js script
-          process.exit(code);
         });
       } else {
         console.error(`git clone exited with code ${code}`);
