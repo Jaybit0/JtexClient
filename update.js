@@ -4,7 +4,7 @@ const { exec } = require('child_process');
 
 function update(args) {
     if (args.length < 2) {
-        console.log("Expecting the commit hash, branch or tag as argument.");
+        console.log("Expecting the commit hash or tag as argument.");
         return;
     }
     var dat = fs.readFileSync(path.join(__dirname, "package.json"));

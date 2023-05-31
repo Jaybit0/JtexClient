@@ -53,13 +53,17 @@
     "upgrade": {
         "description": "Upgrades JTeX to the latest version.",
         "params": {},
-        "optional-params": {},
-        "examples": []
+        "optional-params": {
+            "branch": "The branch to use. If not specified, the main-branch is used."
+        },
+        "examples": [
+            "jtex upgrade dev"
+        ]
     },
     "update": {
         "description": "Updates the JTeX-Core to the specified version.",
         "params": {
-            "version": "The version/commit-hash/branch/tag to update to. Use 'latest' to update to the latest version."
+            "version": "The version/commit-hash/tag to update to. Use 'latest' to update to the latest version."
         },
         "optional-params": {},
         "examples": [

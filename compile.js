@@ -10,7 +10,7 @@ const {extractTexErrors} = require('./tex_error_extractor');
 
 function makepdf(args) {
     if (args.length < 2) {
-        console.log("Expecting an argument after 'compile'. Type 'makepdf --help' for more information.");
+        console.log("Expecting an argument after 'makepdf'. Type 'makepdf --help' for more information.");
         return;
     }
     const cpath = path.isAbsolute(args[1]) ? args[1] : path.join(process.cwd(), args[1]);
