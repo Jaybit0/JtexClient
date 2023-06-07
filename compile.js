@@ -22,7 +22,7 @@ function makepdf(args) {
         console.log("Expecting a file, but found a directory: " + cpath);
         return;
     }
-    compile(["compile", path.dirname(cpath), path.join(path.dirname(cpath), ".compiled")]);
+    compile(["compile", path.dirname(cpath), path.join(path.dirname(cpath), ".compiled"), cpath]);
     const outpath = path.join(path.dirname(cpath), ".compiled"/*, "out"*/);
     const mpath = path.join(path.dirname(cpath), ".compiled", path.basename(cpath, '.jtex') + '.tex');
     const cmd = "pdflatex -interaction=nonstopmode "/*-output-directory=" + outpath + " -aux-directory=" + outpath*/ + " " + mpath;
@@ -58,6 +58,10 @@ function compile(args) {
         return;
     }
     var cpath = path.isAbsolute(args[1]) ? args[1] : path.join(process.cwd(), args[1]);
+    var mainpath = null;
+    if (args.length > 3) {
+        mainpath = path.isAbsolute(args[3]) ? args[3] : path.join(process.cwd(), args[3]);
+    }
     var dest = args.length > 2 ? (path.isAbsolute(args[2]) ? args[2] : path.join(process.cwd(), args[2])) : null;
     if (!fs.existsSync(cpath)) {
         console.log("Directory or file not found: " + cpath);
@@ -71,23 +75,23 @@ function compile(args) {
         if (!dest) {
             dest = cpath;
         }
-        compileDir(cpath, dest, parser);
+        compileDir(cpath, dest, parser, mainpath);
     }
 }
 
-function compileDir(dir, dest, parser) {
+function compileDir(dir, dest, parser, mainpath=null) {
     if (!fs.existsSync(dest))
         fs.mkdirSync(dest, {recursive: true});
     var entries = fs.readdirSync(dir, { withFileTypes: true });
     const folders = entries.filter(entry => entry.isDirectory() && (!isSubdir(dir, dest) || entry.name != path.basename(dest)));
     const files = entries.filter(entry => entry.isFile());
     for (file of files)
-        compileFile(path.join(dir, file.name), parser, path.join(dest, file.name));
+        compileFile(path.join(dir, file.name), parser, path.join(dest, file.name), mainpath);
     for (folder of folders)
-        compileDir(path.join(dir, folder.name), path.join(dest, folder.name), parser);
+        compileDir(path.join(dir, folder.name), path.join(dest, folder.name), parser, mainpath);
 }
 
-function compileFile(f, parser, dest=null) {
+function compileFile(f, parser, dest=null, mainpath=null) {
     if (!fs.existsSync(f)) {
         console.log('File not found: ' + f);
         console.log('Skipping...');
@@ -100,13 +104,14 @@ function compileFile(f, parser, dest=null) {
             dest = path.join(path.dirname(f), path.basename(f, '.jtex') + '.tex');
         else if (dest.endsWith(".jtex"))
             dest = path.join(path.dirname(dest), path.basename(dest, '.jtex') + '.tex');
-        compileJtex(f, parser, dest);
+        var ismain = mainpath && path.relative(mainpath, f) == "";
+        compileJtex(f, parser, dest, ismain);
     } else if (dest && f != dest) {
         fs.copyFileSync(f, dest);
     }
 }
 
-function compileJtex(f, parser, dest=null) {
+function compileJtex(f, parser, dest=null, main=false) {
     var stats = fs.statSync(f);
     if (!stats.isFile()) {
         console.log("Expecting a file, but found a directory: " + f);
@@ -114,7 +119,7 @@ function compileJtex(f, parser, dest=null) {
     }
     const fileContent = fs.readFileSync(f, 'utf8').toString();
     const tokenizer = new Tokenizer(fileContent);
-    var out = parser.parse(tokenizer);
+    var out = parser.parse(tokenizer, "\r\n", main);
 
     if (!dest)
         dest = path.join(path.dirname(f), path.basename(f, '.jtex') + '.tex');
