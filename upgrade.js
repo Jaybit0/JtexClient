@@ -63,7 +63,7 @@ async function upgradeWindows(branchName) {
         gitCheckout.on('exit', async (code) => {
           if (code === 0) {
             // Successfully switched to the specified branch, now run the setup.bat script
-            const setupScript = spawn('cmd', ['/c', 'setup.bat'], { cwd: localRepoPath });
+            const setupScript = spawn('cmd', ['/c', 'setup.bat'], { cwd: localRepoPath, stdio: 'inherit' });
             setupScript.on('error', (error) => {
               console.error('Error running setup script:', error);
             });
