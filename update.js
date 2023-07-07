@@ -29,7 +29,8 @@ function update(args) {
     fs.writeFileSync(path.join(__dirname, "package.json"), JSON.stringify(json, null, 4));
     const updateScript = spawn("npm", ["update", "jtex-core"], {
         cwd: __dirname,
-        stdio: "inherit"
+        stdio: "inherit",
+        shell:true
     });
 
     updateScript.on('error', (error) => {
