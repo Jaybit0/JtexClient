@@ -36,7 +36,8 @@ function update(args) {
     } else if (process.platform == 'win32') {
         npmUpdate = spawn('npm', ['update', 'jtex-core'], {
             cwd: __dirname,
-            stdio: 'inherit'
+            stdio: 'inherit',
+            shell: true
         });
     } else {
         console.log('Your platform is not supported: ' + process.platform);
