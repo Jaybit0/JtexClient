@@ -57,7 +57,10 @@
             "branch": "The branch to use. If not specified, the main-branch is used."
         },
         "examples": [
-            "jtex upgrade dev"
+            {
+                "command": "jtex upgrade dev",
+                "description": "Upgrades JTeX to the latest version of the branch 'dev'."
+            }
         ]
     },
     "update": {

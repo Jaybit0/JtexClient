@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { exec } = require('child_process');
 const { spawn } = require('child_process');
 
 function update(args) {
@@ -27,20 +28,43 @@ function update(args) {
         json.dependencies["jtex-core"] = "git://github.com/Jaybit0/JtexCore.git#" + args[1];
     }
     fs.writeFileSync(path.join(__dirname, "package.json"), JSON.stringify(json, null, 4));
-    const updateScript = spawn("npm", ["update", "jtex-core"], {
-        cwd: __dirname,
-        stdio: "inherit"
+    /*exec("npm update jtex-core", (err, stdout, stderr) => {
+        if (err) {
+            console.log("An error appeared while updating the package.");
+        }
+        console.log(stdout);
+        console.log(stderr);
+        if (!err)
+            console.log("Update successful!");
+    });*/
+
+    var npmUpdate = null;
+    
+    if (process.platform == 'darwin' || process.platform == 'linux') {
+        npmUpdate = spawn('sudo', ['npm', 'update', 'jtex-core'], {
+            cwd: __dirname,
+            stdio: 'inherit'
+        });
+    } else if (process.platform == 'win32') {
+        npmUpdate = spawn('npm', ['update', 'jtex-core'], {
+            cwd: __dirname,
+            stdio: 'inherit',
+            shell: true
+        });
+    } else {
+        console.log('Your platform is not supported: ' + process.platform);
+        return;
+    }
+    
+    npmUpdate.on('error', (error) => {
+        console.error('Error running :', error);
     });
 
-    updateScript.on('error', (error) => {
-        console.error("Error running npm update:", error);
-    });
-
-    updateScript.on('exit', (code) => {
+    npmUpdate.on('exit', (code) => {
         if (code === 0) {
-          console.log('Update completed successfully');
+            console.log('Update completed successfully');
         } else {
-          console.error('Update failed with error code:', code);
+            console.error('Update failed with error code:', code);
         }
     });
 }
