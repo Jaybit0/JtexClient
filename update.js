@@ -4,6 +4,18 @@ const { exec } = require('child_process');
 const { spawn } = require('child_process');
 
 function update(args) {
+    switch(process.platform){
+        case "darwin":
+        case "linux":
+            // Check if the user is root
+            if (process.getuid() !== 0) {
+                console.error('You must run this script as root (sudo jtex update <branch/version/commit>)');
+                return;
+            }
+            break;
+        default:
+    }
+
     if (args.length < 2) {
         console.log("Expecting the commit hash or tag as argument.");
         return;
