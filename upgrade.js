@@ -20,6 +20,10 @@ async function deleteFolderRecursive(path) {
 }
 
 async function upgrade(args) {
+  if (process.env.JTEX_CONTAINERIZED) {
+    console.log('Upgrade is not supported inside the Docker runtime. Rebuild the Docker image or rerun install-docker.sh.');
+    return;
+  }
   branchName = "main"
   if (args.length > 1) {
     branchName = args[1];

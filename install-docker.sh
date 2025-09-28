@@ -1,73 +1,95 @@
 #!/bin/bash
+set -euo pipefail
 
-# This script is intended to be run inside a Docker container
-# where core dependencies (Node.js, TeX Live) are already installed by the Dockerfile.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_DIR="$SCRIPT_DIR"
 
-# No need to check for elevated permissions; Docker RUN commands are already root.
-# No need for platform checks; this is for Linux (Ubuntu) in the container.
-# No need to check/install tex, curl, node, npm; they are pre-installed by Dockerfile.
-# No need to kill existing processes; this is a fresh build/run environment.
+IMAGE_BASE="jtexclient"
+PREFIX="/usr/local"
+BUILD_IMAGE=1
 
-# Define the source file, target directory, and symlink name
-# Assuming VERSION is passed as an environment variable or hardcoded if fixed.
-# If VERSION is meant to be dynamic, consider passing it as an argument or ENV var in Dockerfile.
-# For demonstration, hardcoding as per your original script.
-VERSION="0.0.8"
-SOURCE_FILE="jtex.sh"
-TARGET_DIR="/usr/local/lib/jtex/v$VERSION"
-SYMLINK_NAME="jtex"
+show_help() {
+    cat <<'USAGE'
+Usage: install-docker.sh [options]
 
-echo "Running install-docker.sh for JTex version $VERSION..."
+Options:
+  --image NAME    Base name for the Docker image tag (default: jtexclient)
+  --prefix PATH   Installation prefix (default: /usr/local)
+  --no-build      Skip docker build (fails if image/tag not present)
+  -h, --help      Show this help message
+USAGE
+}
 
-# Create the target directory if it doesn't exist
-# No 'sudo' needed as RUN commands are root.
-mkdir -p "$TARGET_DIR"
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --image)
+            [ $# -ge 2 ] || { echo "Missing value for --image" >&2; exit 1; }
+            IMAGE_BASE="$2"
+            shift 2
+            ;;
+        --prefix)
+            [ $# -ge 2 ] || { echo "Missing value for --prefix" >&2; exit 1; }
+            PREFIX="$2"
+            shift 2
+            ;;
+        --no-build)
+            BUILD_IMAGE=0
+            shift
+            ;;
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1" >&2
+            show_help >&2
+            exit 1
+            ;;
+    esac
+done
 
-if [ $? -ne 0 ]; then
-    echo "Error: Could not create the target directory $TARGET_DIR."
+if ! command -v docker >/dev/null 2>&1; then
+    echo "Docker CLI not found. Install Docker before running this installer." >&2
+    exit 127
+fi
+
+LIB_DIR="$PREFIX/lib/jtex"
+BIN_DIR="$PREFIX/bin"
+
+if ! mkdir -p "$LIB_DIR" "$BIN_DIR" >/dev/null 2>&1; then
+    echo "Unable to create $LIB_DIR or $BIN_DIR. Re-run with elevated permissions or choose a writable --prefix." >&2
     exit 1
 fi
 
-# npm install and npm update are typically handled by the Dockerfile's npm install.
-# If your dosetup.js (or other parts of your app) require re-running npm install/update
-# *after* the initial Dockerfile's npm install, keep these. Otherwise, they might be redundant here.
-# For a clean build, they are likely already handled by the Dockerfile.
-# I'm commenting them out as they are often done in the Dockerfile.
-# npm install
-# npm update
-
-# Run dosetup.js
-# Ensure node is in PATH (it should be if installed via NodeSource in Dockerfile)
-echo "Running Node.js setup script (dosetup.js)..."
-node "./dosetup.js" "$TARGET_DIR"
-
-if [ $? -ne 0 ]; then
-    echo "Error: dosetup.js failed."
+VERSION=$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"[:space:]]*\)".*/\1/p' "$REPO_DIR/package.json" | head -n 1)
+if [ -z "$VERSION" ]; then
+    echo "Unable to determine application version from package.json." >&2
     exit 1
 fi
 
-# Copy the jtex.sh script to the target directory
-echo "Copying $SOURCE_FILE to $TARGET_DIR..."
-cp "$SOURCE_FILE" "$TARGET_DIR"
+VERSION_TAG="$IMAGE_BASE:$VERSION"
+LATEST_TAG="$IMAGE_BASE:latest"
 
-if [ $? -ne 0 ]; then
-    echo "Error: Could not copy $SOURCE_FILE to $TARGET_DIR."
-    exit 1
+if [ "$BUILD_IMAGE" -eq 1 ]; then
+    docker build -t "$VERSION_TAG" -t "$LATEST_TAG" "$REPO_DIR"
+else
+    if ! docker image inspect "$VERSION_TAG" >/dev/null 2>&1 && ! docker image inspect "$LATEST_TAG" >/dev/null 2>&1; then
+        echo "Requested to skip build, but neither $VERSION_TAG nor $LATEST_TAG exists." >&2
+        exit 1
+    fi
 fi
 
-# Make the copied script executable
-chmod +x "$TARGET_DIR/$SOURCE_FILE"
+install -m 755 "$REPO_DIR/jtex-docker.sh" "$LIB_DIR/jtex-docker.sh"
+if [ -f "$REPO_DIR/jtex-docker.bat" ]; then
+    install -m 755 "$REPO_DIR/jtex-docker.bat" "$LIB_DIR/jtex-docker.bat"
+fi
+printf '%s\n' "$VERSION_TAG" > "$LIB_DIR/docker-image"
 
-# Create a symlink in /usr/local/bin to call your script from any directory
-echo "Creating symlink for $SYMLINK_NAME in /usr/local/bin..."
-# No 'sudo' needed as RUN commands are root.
-ln -sf "$TARGET_DIR/$SOURCE_FILE" "/usr/local/bin/$SYMLINK_NAME"
-
-if [ $? -ne 0 ]; then
-    echo "Error: Could not create symlink for $SYMLINK_NAME."
-    exit 1
+ln -sf "$LIB_DIR/jtex-docker.sh" "$BIN_DIR/jtex"
+if [ -f "$LIB_DIR/jtex-docker.bat" ]; then
+    ln -sf "$LIB_DIR/jtex-docker.bat" "$BIN_DIR/jtex.bat"
 fi
 
-echo "JTex installation for Docker complete."
-
-exit 0
+echo "Docker image built and tagged as $VERSION_TAG (also tagged latest)."
+echo "CLI wrapper installed to $BIN_DIR/jtex."
+echo "Use 'jtex help' to verify the installation."

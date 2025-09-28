@@ -10,10 +10,37 @@ JTeX currently supports the following operating systems:
 
 - Windows
 - macOS (Darwin)
+- Linux
+
+## Docker Support
+
+If you prefer not to install a local TeX distribution, build the provided Docker image and keep using the `jtex` command normally.
+
+### macOS / Linux
+
+1. Make sure Docker Desktop (or another Docker engine) is running.
+2. From the repository root execute `sudo ./install-docker.sh`.
+3. Run `jtex help` to confirm the wrapper is available on your PATH.
+
+The installer builds the image (tagged `jtexclient:<version>` and `jtexclient:latest`) and installs a lightweight wrapper at `/usr/local/bin/jtex`. The wrapper mounts your home directory so files in `~/.jtex` persist between runs and executes the containerised CLI with your user ID to avoid root-owned artefacts.
+
+To update the container simply rerun `sudo ./install-docker.sh`; the script will rebuild and retag the image. Inside the container the `update` and `upgrade` commands are disabled because updates are intended to happen through the image rebuild.
+
+#### Advanced configuration
+
+- Set `JTEX_DOCKER_IMAGE` to point to a custom image tag.
+- Populate `JTEX_DOCKER_EXTRA_VOLUMES` with additional bind mounts (one per line, e.g. `/data:/data`).
+- Populate `JTEX_DOCKER_ENV` with additional environment variables (one per line, e.g. `KEY=value`).
+
+### Windows
+
+Windows users can either run the Linux installer from WSL or copy `jtex-docker.bat` somewhere on the PATH and execute it directly. The batch script expects the Docker image to exist (build it with `docker build -t jtexclient .`). It mounts the current working directory at `/workspace` and the user profile at `/host-home` before delegating to the containerised CLI.
 
 ## Prerequisites
 
-Before you begin the installation process, ensure that MikTex is installed on your system, and the terminal can recognise the command pdflatex. If you haven't installed it already, you can download it from the official [MikTex website](https://miktex.org/download).
+The prerequisites below apply to the native installation path. When using the Docker workflow the TeX distribution and Node.js runtime are bundled inside the container.
+
+Before you begin the native installation process, ensure that MikTex is installed on your system, and the terminal can recognise the command pdflatex. If you haven't installed it already, you can download it from the official [MikTex website](https://miktex.org/download).
 
 ## Installation
 

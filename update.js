@@ -4,6 +4,10 @@ const { exec } = require('child_process');
 const { spawn } = require('child_process');
 
 function update(args) {
+    if (process.env.JTEX_CONTAINERIZED) {
+        console.log('Update is not supported inside the Docker runtime. Rebuild the Docker image to apply updates.');
+        return;
+    }
     switch(process.platform){
         case "darwin":
         case "linux":
