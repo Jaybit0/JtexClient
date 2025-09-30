@@ -18,35 +18,68 @@ function makepdf(args) {
         console.log("File not found: " + cpath);
         return;
     }
-    if (!fs.statSync(cpath).isFile()) {
-        console.log("Expecting a file, but found a directory: " + cpath);
-        return;
+    let mainFile = cpath;
+    let workdir = path.dirname(cpath);
+    let compiledDir = path.join(workdir, ".compiled");
+    if (fs.statSync(cpath).isDirectory()) {
+        workdir = cpath;
+        compiledDir = path.join(workdir, ".compiled");
+        if (args.length > 2) {
+            const supplied = args[2];
+            mainFile = path.isAbsolute(supplied) ? supplied : path.join(workdir, supplied);
+        } else {
+            const candidates = [
+                path.join(workdir, path.basename(workdir) + '.jtex'),
+                path.join(workdir, 'main.jtex'),
+                path.join(workdir, 'index.jtex')
+            ];
+            for (const candidate of candidates) {
+                if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+                    mainFile = candidate;
+                    break;
+                }
+            }
+        }
+        if (!fs.existsSync(mainFile) || fs.statSync(mainFile).isDirectory()) {
+            console.log('Directory input requires a main .jtex file.');
+            console.log('Provide it explicitly: jtex makepdf ' + args[1] + ' path/to/main.jtex');
+            return;
+        }
+        compile(["compile", workdir, compiledDir, mainFile]);
+    } else {
+        compile(["compile", path.dirname(cpath), compiledDir, cpath]);
     }
-    compile(["compile", path.dirname(cpath), path.join(path.dirname(cpath), ".compiled"), cpath]);
-    const outpath = path.join(path.dirname(cpath), ".compiled"/*, "out"*/);
-    const mpath = path.join(path.dirname(cpath), ".compiled", path.basename(cpath, '.jtex') + '.tex');
+    const outpath = compiledDir;
+    const compiledTexRelative = path.relative(workdir, mainFile).replace(/\.jtex$/i, '.tex');
+    const mpath = path.join(outpath, compiledTexRelative);
     const cmd = "pdflatex -interaction=nonstopmode \"" + mpath + "\"";
-    exec(cmd, {cwd: path.join(path.dirname(cpath), ".compiled")}, (err, stdout, stderr) => {
+    exec(cmd, {cwd: outpath}, (err, stdout, stderr) => {
+        const logPath = mpath.replace(/\.tex$/i, '.log');
+        const pdfPath = mpath.replace(/\.tex$/i, '.pdf');
         if (err) {
             console.log("An error appeared in the latex compilation.");
-            console.log("For further information check the log file: .\\" + path.relative(path.dirname(cpath), path.join(outpath, path.basename(cpath, ".jtex") + ".log")));
-            var logs = fs.readFileSync(path.join(outpath, path.basename(cpath, ".jtex") + ".log"), "utf8");
-            logErrors = extractTexErrors(logs, path.join(path.dirname(cpath), ".compiled"));
-            fName = path.basename(cpath, ".jtex") + ".log";
-            if (logErrors.length > 0)
-                console.log("Quick error scanner (" + fName + "):");
-            for (logErr of logErrors) {
-                console.log();
-                console.log(" - line    " +  + logErr.line);
-                console.log("   - file: " + logErr.file);
-                console.log("   - msg:  " + logErr.msg);
+            if (fs.existsSync(logPath)) {
+                console.log("For further information check the log file: .\\" + path.relative(workdir, logPath));
+                const logs = fs.readFileSync(logPath, "utf8");
+                const logErrors = extractTexErrors(logs, outpath);
+                const fName = path.basename(logPath);
+                if (logErrors.length > 0)
+                    console.log("Quick error scanner (" + fName + "):");
+                for (const logErr of logErrors) {
+                    console.log();
+                    console.log(" - line    " + logErr.line);
+                    console.log("   - file: " + logErr.file);
+                    console.log("   - msg:  " + logErr.msg);
+                }
+            } else {
+                console.log("No log file produced (pdflatex may be missing or crashed before writing a log).");
             }
         }
         // console.log(stdout);
         console.log(stderr);
-        var pdfDir = path.join(outpath, path.basename(cpath, '.jtex') + '.pdf');
-        if (fs.existsSync(pdfDir))
-            fs.copyFileSync(pdfDir, path.join(path.dirname(cpath), path.basename(pdfDir)));
+        const pdfTarget = path.join(path.dirname(mainFile), path.basename(pdfPath));
+        if (fs.existsSync(pdfPath))
+            fs.copyFileSync(pdfPath, pdfTarget);
         if (!err)
             console.log("Compilation successful!");
     });
