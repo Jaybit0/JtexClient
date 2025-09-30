@@ -60,6 +60,17 @@ The installation process varies depending on your operating system.
 
 After installation, you can run JTeX by typing `jtex [help]` in the terminal or command prompt.
 
+### Using a local jtex-core checkout
+
+When iterating on the core library itself, point a command to your local clone with the optional `--core` flag. The value can be an absolute path or relative to the current working directory.
+
+```
+jtex compile --core ../JtexCore ./examples
+jtex makepdf --core ../JtexCore ./docs
+```
+
+The override is applied for that single invocation, so your global installation continues to use the packaged dependency.
+
 ## Contributing
 
 We welcome contributions from the community. If you wish to contribute, please take a look at our contributing guidelines.

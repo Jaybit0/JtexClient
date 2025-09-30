@@ -24,7 +24,8 @@
             "path": "The JTeX-file or directory to compile."
         },
         "optional-params": {
-            "destination": "The destination file or folder. If not specified, the output files lie in the same folder and have the same name. All files will be copied to the new directory (not only '*.jtex' files)"
+            "destination": "The destination file or folder. If not specified, the output files lie in the same folder and have the same name. All files will be copied to the new directory (not only '*.jtex' files)",
+            "--core": "Path to a local jtex-core checkout to use for this compilation run."
         },
         "examples": [
             {
@@ -42,11 +43,18 @@
         "params": {
             "path": "The main JTeX-file of this project (root file)."
         },
-        "optional-params": {},
+        "optional-params": {
+            "main-file": "If 'path' is a directory, specify the main .jtex file relative to that directory.",
+            "--core": "Path to a local jtex-core checkout to use for this run."
+        },
         "examples": [
             {
                 "command": "jtex makepdf ./main.jtex",
                 "description": "Compiles the directory of the file './main.jtex' and creates a pdf using 'pdflatex' with the root file './main.jtex'"
+            },
+            {
+                "command": "jtex makepdf --core ../JtexCore ./docs",
+                "description": "Compiles the './docs' project using a local jtex-core checkout located in '../JtexCore'."
             }
         ]
     },

@@ -1,6 +1,4 @@
-const {JtexEnvironment} = require('jtex-core/envutils');
-const {Tokenizer} = require('jtex-core/tokenizer');
-const {Parser} = require('jtex-core/parser');
+const Module = require('module');
 const {isSubdir} = require('./utils');
 const path = require('path');
 const fs = require('fs');
@@ -8,7 +6,183 @@ const os = require('os');
 const {exec} = require('child_process');
 const {extractTexErrors} = require('./tex_error_extractor');
 
+const CORE_EXPORT_FALLBACKS = {
+    JtexEnvironment: ['JtexEnvironment', 'default'],
+    Tokenizer: ['Tokenizer', 'default'],
+    Parser: ['Parser', 'default']
+};
+
+let defaultCoreCache = null;
+
+function extractCoreOption(args) {
+    const cleaned = [];
+    let coreOverride = null;
+    let error = null;
+    for (let i = 0; i < args.length; i++) {
+        const arg = args[i];
+        if (arg === '--core') {
+            if (i + 1 >= args.length) {
+                error = "Missing value after --core.";
+                break;
+            }
+            coreOverride = args[i + 1];
+            i++;
+            continue;
+        }
+        if (arg.startsWith('--core=')) {
+            coreOverride = arg.substring('--core='.length);
+            continue;
+        }
+        cleaned.push(arg);
+    }
+    return {
+        corePath: coreOverride ? path.resolve(coreOverride) : null,
+        args: cleaned,
+        error
+    };
+}
+
+function loadCoreModules(corePath) {
+    try {
+        if (corePath) {
+            return importCoreModules(createCoreRequire(corePath), corePath);
+        }
+        if (!defaultCoreCache) {
+            const pkgPath = require.resolve('jtex-core/package.json');
+            defaultCoreCache = importCoreModules(Module.createRequire(pkgPath), 'jtex-core');
+        }
+        return defaultCoreCache;
+    } catch (err) {
+        if (corePath) {
+            console.log('Failed to load jtex-core override from: ' + corePath);
+        } else {
+            console.log('Failed to load the bundled jtex-core package. Ensure dependencies are installed.');
+        }
+        console.log(err.message);
+        return null;
+    }
+}
+
+function createCoreRequire(targetPath) {
+    const resolved = path.resolve(targetPath);
+    if (!fs.existsSync(resolved)) {
+        throw new Error('Path does not exist: ' + resolved);
+    }
+    const stats = fs.statSync(resolved);
+    const candidates = [];
+    if (stats.isDirectory()) {
+        candidates.push(path.join(resolved, 'package.json'));
+        candidates.push(path.join(resolved, 'index.js'));
+        candidates.push(path.join(resolved, 'dist', 'index.js'));
+    } else {
+        candidates.push(resolved);
+    }
+    let lastError = null;
+    for (const candidate of candidates) {
+        try {
+            return Module.createRequire(candidate);
+        } catch (err) {
+            lastError = err;
+        }
+    }
+    throw lastError || new Error('Unable to construct require for override: ' + resolved);
+}
+
+function importCoreModules(coreRequire, originLabel) {
+    const envModule = requireFromCandidates(coreRequire, [
+        './envutils',
+        './envutils.js',
+        './dist/envutils',
+        './dist/envutils.js',
+        './lib/envutils',
+        './lib/envutils.js',
+        './src/envutils',
+        './src/envutils.js',
+        './build/envutils',
+        './build/envutils.js'
+    ], originLabel, 'envutils');
+    const tokenizerModule = requireFromCandidates(coreRequire, [
+        './tokenizer',
+        './tokenizer.js',
+        './dist/tokenizer',
+        './dist/tokenizer.js',
+        './lib/tokenizer',
+        './lib/tokenizer.js',
+        './src/tokenizer',
+        './src/tokenizer.js',
+        './build/tokenizer',
+        './build/tokenizer.js'
+    ], originLabel, 'tokenizer');
+    const parserModule = requireFromCandidates(coreRequire, [
+        './parser',
+        './parser.js',
+        './dist/parser',
+        './dist/parser.js',
+        './lib/parser',
+        './lib/parser.js',
+        './src/parser',
+        './src/parser.js',
+        './build/parser',
+        './build/parser.js'
+    ], originLabel, 'parser');
+
+    return {
+        JtexEnvironment: resolveExport(envModule, 'JtexEnvironment'),
+        Tokenizer: resolveExport(tokenizerModule, 'Tokenizer'),
+        Parser: resolveExport(parserModule, 'Parser')
+    };
+}
+
+function requireFromCandidates(coreRequire, candidates, originLabel, label) {
+    let lastError = null;
+    for (const candidate of candidates) {
+        try {
+            return coreRequire(candidate);
+        } catch (err) {
+            if (err.code !== 'MODULE_NOT_FOUND') {
+                lastError = err;
+                break;
+            }
+            lastError = err;
+        }
+    }
+    const message = 'Unable to load ' + label + ' from ' + originLabel + '. Tried: ' + candidates.join(', ');
+    if (lastError) {
+        throw new Error(message + '\n' + lastError.message);
+    }
+    throw new Error(message);
+}
+
+function resolveExport(moduleExport, key) {
+    const fallbacks = CORE_EXPORT_FALLBACKS[key] || [];
+    const possibles = Array.isArray(fallbacks) ? fallbacks : [fallbacks];
+    if (moduleExport && typeof moduleExport === 'object') {
+        for (const name of [key, ...possibles]) {
+            if (moduleExport[name]) {
+                return moduleExport[name];
+            }
+        }
+    }
+    if (typeof moduleExport === 'function') {
+        return moduleExport;
+    }
+    if (moduleExport && moduleExport.default && typeof moduleExport.default === 'function') {
+        return moduleExport.default;
+    }
+    throw new Error('Cannot resolve export for ' + key + '.');
+}
+
 function makepdf(args) {
+    const parsed = extractCoreOption(args);
+    if (parsed.error) {
+        console.log(parsed.error);
+        return;
+    }
+    args = parsed.args;
+    const core = loadCoreModules(parsed.corePath);
+    if (!core) {
+        return;
+    }
     if (args.length < 2) {
         console.log("Expecting an argument after 'makepdf'. Type 'makepdf --help' for more information.");
         return;
@@ -45,10 +219,8 @@ function makepdf(args) {
             console.log('Provide it explicitly: jtex makepdf ' + args[1] + ' path/to/main.jtex');
             return;
         }
-        compile(["compile", workdir, compiledDir, mainFile]);
-    } else {
-        compile(["compile", path.dirname(cpath), compiledDir, cpath]);
     }
+    runCompilation(core, cpath, compiledDir, mainFile);
     const outpath = compiledDir;
     const compiledTexRelative = path.relative(workdir, mainFile).replace(/\.jtex$/i, '.tex');
     const mpath = path.join(outpath, compiledTexRelative);
@@ -86,6 +258,16 @@ function makepdf(args) {
 }
 
 function compile(args) {
+    const parsed = extractCoreOption(args);
+    if (parsed.error) {
+        console.log(parsed.error);
+        return;
+    }
+    args = parsed.args;
+    const core = loadCoreModules(parsed.corePath);
+    if (!core) {
+        return;
+    }
     if (args.length < 2) {
         console.log("Expecting an argument after 'compile'. Type 'compile --help' for more information.");
         return;
@@ -100,31 +282,37 @@ function compile(args) {
         console.log("Directory or file not found: " + cpath);
         return;
     }
-    var env = new JtexEnvironment(path.join(os.homedir(), ".jtex", "environments", "default")).init(force=true);
-    var parser = new Parser(env);
-    if (fs.statSync(cpath).isFile()) {
-        compileFile(cpath, parser, dest);
-    } else {
-        if (!dest) {
-            dest = cpath;
-        }
-        compileDir(cpath, dest, parser, mainpath);
-    }
+    runCompilation(core, cpath, dest, mainpath);
 }
 
-function compileDir(dir, dest, parser, mainpath=null) {
+function runCompilation(core, sourcePath, dest, mainpath) {
+    const envRoot = path.join(os.homedir(), ".jtex", "environments", "default");
+    const environment = new core.JtexEnvironment(envRoot).init(force=true);
+    const parser = new core.Parser(environment);
+    const tokenizerCtor = core.Tokenizer;
+    if (fs.statSync(sourcePath).isFile()) {
+        compileFile(sourcePath, parser, tokenizerCtor, dest, mainpath);
+        return;
+    }
+    if (!dest) {
+        dest = sourcePath;
+    }
+    compileDir(sourcePath, dest, parser, tokenizerCtor, mainpath);
+}
+
+function compileDir(dir, dest, parser, tokenizerCtor, mainpath=null) {
     if (!fs.existsSync(dest))
         fs.mkdirSync(dest, {recursive: true});
     var entries = fs.readdirSync(dir, { withFileTypes: true });
     const folders = entries.filter(entry => entry.isDirectory() && (!isSubdir(dir, dest) || entry.name != path.basename(dest)));
     const files = entries.filter(entry => entry.isFile());
-    for (file of files)
-        compileFile(path.join(dir, file.name), parser, path.join(dest, file.name), mainpath);
-    for (folder of folders)
-        compileDir(path.join(dir, folder.name), path.join(dest, folder.name), parser, mainpath);
+    for (const file of files)
+        compileFile(path.join(dir, file.name), parser, tokenizerCtor, path.join(dest, file.name), mainpath);
+    for (const folder of folders)
+        compileDir(path.join(dir, folder.name), path.join(dest, folder.name), parser, tokenizerCtor, mainpath);
 }
 
-function compileFile(f, parser, dest=null, mainpath=null) {
+function compileFile(f, parser, tokenizerCtor, dest=null, mainpath=null) {
     if (!fs.existsSync(f)) {
         console.log('File not found: ' + f);
         console.log('Skipping...');
@@ -138,20 +326,20 @@ function compileFile(f, parser, dest=null, mainpath=null) {
         else if (dest.endsWith(".jtex"))
             dest = path.join(path.dirname(dest), path.basename(dest, '.jtex') + '.tex');
         var ismain = mainpath && path.relative(mainpath, f) == "";
-        compileJtex(f, parser, dest, ismain);
+        compileJtex(f, parser, tokenizerCtor, dest, ismain);
     } else if (dest && f != dest) {
         fs.copyFileSync(f, dest);
     }
 }
 
-function compileJtex(f, parser, dest=null, main=false) {
+function compileJtex(f, parser, tokenizerCtor, dest=null, main=false) {
     var stats = fs.statSync(f);
     if (!stats.isFile()) {
         console.log("Expecting a file, but found a directory: " + f);
         return;
     }
     const fileContent = fs.readFileSync(f, 'utf8').toString();
-    const tokenizer = new Tokenizer(fileContent);
+    const tokenizer = new tokenizerCtor(fileContent);
     var out = parser.parse(tokenizer, "\r\n", main);
 
     if (!dest)
